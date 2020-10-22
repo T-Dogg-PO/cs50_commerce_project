@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.urls import reverse
+# from django.conf import settings
 
 
 class User(AbstractUser):
@@ -31,13 +32,14 @@ class AuctionListing(models.Model):
 
     #
     def get_absolute_url(self):
-        return reverse('')
+        return reverse('index')
 
-
+#
 # # Implement model for bids
 # class Bids(models.Model):
-#     bidder = User.get_username()  # Get the name of the user making a new bid
+#     #bidder = settings.AUTH_USER_MODEL  # Get the name of the user making a new bid
 #     bid = models.DecimalField(max_digits=8, decimal_places=2, blank=False)  # Store the value of the new bid
+#     listing = models.ForeignKey(AuctionListing, on_delete=models.CASCADE, related_name="auction_listing")
 
 
 # # Implement model for comments

@@ -4,6 +4,6 @@
     <h2>Active Listings</h2>
 
     {% for listing in active_listings %}
-        {{ listing.name }} <br>
+        <a class="nav-link" href="{% url 'listing' listing.pk %}">{{ listing.name }}</a>
     {% endfor %}
 {% endblock %}

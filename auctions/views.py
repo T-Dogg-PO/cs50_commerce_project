@@ -63,6 +63,19 @@ def create(request):
         })
 
 
+# Method for viewing current listings
+def listing(request, listing_id):
+
+    listing = AuctionListing.objects.get(id=listing_id)
+
+    return render(request, "auctions/listing.html", {
+        "listing": listing,
+    })
+
+
+# Method for placing bids
+
+
 def login_view(request):
     if request.method == "POST":
 

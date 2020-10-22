@@ -1,0 +1,15 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+
+    <h1>{{ listing.name }}</h1>
+
+    {{ listing.description }}
+
+    {% if listing.current_price %}
+        <p>Highest bid so far: {{ listing.current_price }}</p>
+    {% else %}
+        <p>No bids yet. Starting bid: {{ listing.starting_bid }}</p>
+    {% endif %}
+
+{% endblock %}
