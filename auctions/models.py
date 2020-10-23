@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.urls import reverse
+from django.conf import settings
 
 
 class User(AbstractUser):
@@ -24,6 +25,7 @@ class AuctionListing(models.Model):
     current_price = models.DecimalField(max_digits=8, decimal_places=2, blank=True, null=True)  # Current price, same as above
     image_link = models.URLField(blank=True)  # Optional field for image link URL
     category = models.CharField(max_length=128, blank=True, null=True)  # Category will be its own class so that admin users can add mroe categories if needed
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default=1)
 
     # When this listing is displayed on the site, show the name as a default
     def __str__(self):

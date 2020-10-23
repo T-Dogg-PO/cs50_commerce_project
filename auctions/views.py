@@ -50,6 +50,7 @@ def create(request):
             new_listing.starting_bid = create_form.cleaned_data["starting_bid"]
             new_listing.image_link = create_form.cleaned_data["image_link"]
             new_listing.category = create_form.cleaned_data["category"]
+            new_listing.user = request.user
 
             new_listing.save()
 
