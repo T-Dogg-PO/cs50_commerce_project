@@ -63,6 +63,16 @@ def create(request):
         })
 
 
+# Method for viewing a listing's details
+def listing(request, listing_id):
+
+    listing = AuctionListing.objects.get(id=listing_id)
+
+    return render(request, "auctions/listing.html", {
+        "listing": listing
+    })
+
+
 def login_view(request):
     if request.method == "POST":
 
