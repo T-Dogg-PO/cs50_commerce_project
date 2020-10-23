@@ -21,8 +21,8 @@ class Category(models.Model):
 class AuctionListing(models.Model):
     name = models.CharField(max_length=128, blank=False)  # Name of the listing is a CharField, max length allowed 128 characters
     description = models.TextField(blank=False)  # Item description is a text field with undefined length for now
-    starting_bid = models.DecimalField(max_digits=8, decimal_places=2, blank=False)  # Starting bid with 2dp, up to 1 Million
-    current_price = models.DecimalField(max_digits=8, decimal_places=2, blank=True, null=True)  # Current price, same as above
+    price = models.DecimalField(max_digits=8, decimal_places=2, blank=False)  # Starting bid with 2dp, up to 1 Million
+    current_highest_bidder = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, related_name="current_highest_bidder")
     image_link = models.URLField(blank=True)  # Optional field for image link URL
     category = models.CharField(max_length=128, blank=True, null=True)  # Category will be its own class so that admin users can add mroe categories if needed
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default=1)
@@ -36,10 +36,10 @@ class AuctionListing(models.Model):
         return reverse('')
 
 
-# # Implement model for bids
-# class Bids(models.Model):
-#     bidder = User.get_username()  # Get the name of the user making a new bid
-#     bid = models.DecimalField(max_digits=8, decimal_places=2, blank=False)  # Store the value of the new bid
+# Implement model for bids
+class Bid(models.Model):
+    bidder = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default=1)# Get the name of the user making a new bid
+    price = models.DecimalField(max_digits=8, decimal_places=2, blank=False)  # Store the value of the new bid
 
 
 # # Implement model for comments

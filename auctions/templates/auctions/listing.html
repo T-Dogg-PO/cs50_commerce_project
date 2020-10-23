@@ -10,12 +10,19 @@
         <img src="{{ listing.image_link }}" alt="{{ listing.name }} image">
     {% endif %}
 
-    {% if listing.current_price %}
-        <p>Current highest bid: {{ listing.current_price }}</p>
-    {% else %}
-        <p>Starting bid: {{ listing.starting_bid }}</p>
-    {% endif %}
+    <p>Current price: {{ listing.price }}</p>
 
+    {% if user.is_authenticated %}
+        <h6>Place your bid: </h6>
+        <form action="{% url 'new_bid' listing.id %}" method="POST">
+            {% csrf_token %}
+            {{ place_bid }}
+            <input type="submit" value="Place Bid">
+            {% if error == True %}
+                Error: New bid must be higher than the current highest bid
+            {% endif %}
+        </form>
+    {% endif %}
 
 
 {% endblock %}

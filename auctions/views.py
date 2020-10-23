@@ -6,7 +6,7 @@ from django.urls import reverse
 from django import forms
 from django.db.models.fields import BLANK_CHOICE_DASH
 
-from .models import User, AuctionListing, Category
+from .models import User, AuctionListing, Category, Bid
 
 # Create our category choices variable based on the categories that get created in the Admin view
 category_choices = Category.objects.all().values_list('category_name', 'category_name')
@@ -14,13 +14,14 @@ category_choices_list = []
 for item in category_choices:
     category_choices_list.append(item)
 
+
 # Create Django Form for creating a new listing
 class Create(forms.ModelForm):
     class Meta:
         # Take fields from the AuctionListing model
         model = AuctionListing
         # For this form, display only these fields
-        fields = ['name', 'description', 'starting_bid', 'image_link', 'category']
+        fields = ['name', 'description', 'price', 'image_link', 'category']
         # Use default input types for all the fields (defined in models.py), but specify that categories will be
         # selected from the list of available categories
         widgets = {
@@ -28,11 +29,21 @@ class Create(forms.ModelForm):
         }
 
 
+# Create Django Form for adding a new bid to a listing
+class Bid(forms.ModelForm):
+    class Meta:
+        # Take fields from Bid model
+        model = Bid
+        # For this form, display only the price field
+        fields = ['price']
+
+
 # Default view / landing page
 def index(request):
     return render(request, "auctions/index.html", {
         "active_listings": AuctionListing.objects.all()
     })
+
 
 # Method for creating new listings
 def create(request):
@@ -47,7 +58,7 @@ def create(request):
             new_listing = AuctionListing()
             new_listing.name = create_form.cleaned_data["name"]
             new_listing.description = create_form.cleaned_data["description"]
-            new_listing.starting_bid = create_form.cleaned_data["starting_bid"]
+            new_listing.price = create_form.cleaned_data["price"]
             new_listing.image_link = create_form.cleaned_data["image_link"]
             new_listing.category = create_form.cleaned_data["category"]
             new_listing.user = request.user
@@ -66,12 +77,42 @@ def create(request):
 
 # Method for viewing a listing's details
 def listing(request, listing_id):
-
-    listing = AuctionListing.objects.get(id=listing_id)
+    current_listing = AuctionListing.objects.get(id=listing_id)
 
     return render(request, "auctions/listing.html", {
-        "listing": listing
+        "listing": current_listing,
+        "place_bid": Bid()
     })
+
+
+# Method for placing a new bid on a current listing
+def new_bid(request, listing_id):
+    if request.method == "POST":
+        bid_form = Bid(request.POST)
+
+        if bid_form.is_valid():
+            current_listing = AuctionListing.objects.get(id=listing_id)
+            current_price = current_listing.price
+
+            bid_price = bid_form.cleaned_data["price"]
+
+            if bid_price <= current_price:
+                return render(request, "auctions/listing.html", {
+                    "listing": current_listing,
+                    "place_bid": Bid(),
+                    "error": True
+                })
+            else:
+                current_listing.price = bid_price
+                current_listing.current_highest_bidder = request.user
+                current_listing.save()
+                return render(request, "auctions/listing.html", {
+                    "listing": current_listing,
+                    "place_bid": Bid(),
+                    "error": False
+                })
+        return index(request)
+    return index(request)
 
 
 def login_view(request):

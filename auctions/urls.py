@@ -8,5 +8,6 @@ urlpatterns = [
     path("logout", views.logout_view, name="logout"),
     path("register", views.register, name="register"),
     path("create", views.create, name="create"),
-    path("listing/<int:listing_id>", views.listing, name="listing")
+    path("listing/<int:listing_id>", views.listing, name="listing"),
+    path("new_bid/<int:listing_id>", views.new_bid, name="new_bid")
 ]
