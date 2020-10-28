@@ -30,7 +30,7 @@ class Create(forms.ModelForm):
 
 
 # Create Django Form for adding a new bid to a listing
-class Bid(forms.ModelForm):
+class Bid_Form(forms.ModelForm):
     class Meta:
         # Take fields from Bid model
         model = Bid
@@ -81,14 +81,14 @@ def listing(request, listing_id):
 
     return render(request, "auctions/listing.html", {
         "listing": current_listing,
-        "place_bid": Bid()
+        "place_bid": Bid_Form()
     })
 
 
 # Method for placing a new bid on a current listing
 def new_bid(request, listing_id):
     if request.method == "POST":
-        bid_form = Bid(request.POST)
+        bid_form = Bid_Form(request.POST)
 
         if bid_form.is_valid():
             current_listing = AuctionListing.objects.get(id=listing_id)
@@ -99,16 +99,20 @@ def new_bid(request, listing_id):
             if bid_price <= current_price:
                 return render(request, "auctions/listing.html", {
                     "listing": current_listing,
-                    "place_bid": Bid(),
+                    "place_bid": Bid_Form(),
                     "error": True
                 })
             else:
+                bid = Bid()
+                bid.listing = current_listing
+                bid.price = bid_price
                 current_listing.price = bid_price
                 current_listing.current_highest_bidder = request.user
                 current_listing.save()
+                bid.save()
                 return render(request, "auctions/listing.html", {
                     "listing": current_listing,
-                    "place_bid": Bid(),
+                    "place_bid": Bid_Form(),
                     "error": False
                 })
         return index(request)

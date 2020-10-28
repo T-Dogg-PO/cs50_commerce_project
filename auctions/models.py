@@ -39,15 +39,24 @@ class AuctionListing(models.Model):
 # Implement model for bids
 class Bid(models.Model):
     bidder = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default=1)# Get the name of the user making a new bid
+    listing = models.ForeignKey(AuctionListing, on_delete=models.CASCADE, default=1)
     price = models.DecimalField(max_digits=8, decimal_places=2, blank=False)  # Store the value of the new bid
 
+    def __str__(self):
+        return '%s - %s' % (self.listing.name, self.price)
 
-# # Implement model for comments
-# class Comments(models.Model):
-#     commentor = User.get_username()  # Get the name of the user creating the comment
-#     listing = models.OneToOneField(AuctionListing, on_delete=models.CASCADE)
-#
-#
+
+# Implement model for comments
+class Comment(models.Model):
+    listing = models.ForeignKey(AuctionListing, on_delete=models.CASCADE, related_name="comments")
+    commentor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default=1)  # Get the name of the user creating the comment
+    content = models.TextField(blank=False)
+    date_added = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return '%s - %s' % (self.listing.name, self.commentor)
+
+
 # # Implement model for each user's watchlist
 # class Watchlist(models.Model):
 #     user = User.get_username()  # Get the name of the user who's Watchlist we are going to
