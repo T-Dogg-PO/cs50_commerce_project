@@ -146,6 +146,30 @@ def new_comment(request, listing_id):
     return listing(request, listing_id)
 
 
+# Method for listing the categories
+def categories(request):
+    current_categories = []
+    for category in category_choices_list:
+        current_categories.append(category[1])
+
+    return render(request, "auctions/categories.html", {
+        "cats": current_categories
+    })
+
+
+# Method for displaying all of the listings under a specific category
+def category(request, cat):
+    list_of_listings = []
+    for individual_listing in AuctionListing.objects.all():
+        if individual_listing.category == cat:
+            list_of_listings.append(individual_listing)
+
+    return render(request, "auctions/category.html", {
+        "category": cat,
+        "list_of_listings": list_of_listings
+    })
+
+
 def login_view(request):
     if request.method == "POST":
 
