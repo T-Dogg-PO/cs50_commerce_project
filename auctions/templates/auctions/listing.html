@@ -25,4 +25,26 @@
     {% endif %}
 
 
+    {% if user.is_authenticated %}
+        <h6>New Comment:</h6>
+        <form action="{% url 'new_comment' listing.id %}" method="POST">
+            {% csrf_token %}
+            {{ new_comment }}
+            <input type="submit" value="Post comment">
+        </form>
+    {% endif %}
+
+
+    <h6>Comments: </h6>
+    {% if not listing.comments.all %}
+        No comments yet.
+    {% else %}
+        {% for comment in listing.comments.all %}
+            <strong>{{ comment.commentor}} - {{ comment.date_added }}</strong>
+            <br/>
+            {{ comment.content }}
+        {% endfor %}
+    {% endif %}
+
+
 {% endblock %}

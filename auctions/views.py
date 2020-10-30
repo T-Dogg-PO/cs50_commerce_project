@@ -1,4 +1,5 @@
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect
@@ -6,7 +7,7 @@ from django.urls import reverse
 from django import forms
 from django.db.models.fields import BLANK_CHOICE_DASH
 
-from .models import User, AuctionListing, Category, Bid
+from .models import User, AuctionListing, Category, Bid, Comment
 
 # Create our category choices variable based on the categories that get created in the Admin view
 category_choices = Category.objects.all().values_list('category_name', 'category_name')
@@ -36,6 +37,12 @@ class Bid_Form(forms.ModelForm):
         model = Bid
         # For this form, display only the price field
         fields = ['price']
+
+# Django form for creating a new comment
+class Comment_Form(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ['content']
 
 
 # Default view / landing page
@@ -81,7 +88,8 @@ def listing(request, listing_id):
 
     return render(request, "auctions/listing.html", {
         "listing": current_listing,
-        "place_bid": Bid_Form()
+        "place_bid": Bid_Form(),
+        "new_comment": Comment_Form()
     })
 
 
@@ -117,6 +125,25 @@ def new_bid(request, listing_id):
                 })
         return index(request)
     return index(request)
+
+
+# Method for creating a new comment on a listing
+@login_required
+def new_comment(request, listing_id):
+    if request.method == "POST":
+        comment_form = Comment_Form(request.POST)
+
+        if comment_form.is_valid():
+            current_listing = AuctionListing.objects.get(id=listing_id)
+            comment = Comment()
+            comment.listing = current_listing
+            comment.content = comment_form.cleaned_data["content"]
+            comment.commentor = request.user
+            comment.save()
+
+            return listing(request, listing_id)
+
+    return listing(request, listing_id)
 
 
 def login_view(request):
