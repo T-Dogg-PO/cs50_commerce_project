@@ -7,7 +7,7 @@ from django.urls import reverse
 from django import forms
 from django.db.models.fields import BLANK_CHOICE_DASH
 
-from .models import User, AuctionListing, Category, Bid, Comment
+from .models import User, AuctionListing, Category, Bid, Comment, Watchlist
 
 # Create our category choices variable based on the categories that get created in the Admin view
 category_choices = Category.objects.all().values_list('category_name', 'category_name')
@@ -86,10 +86,19 @@ def create(request):
 def listing(request, listing_id):
     current_listing = AuctionListing.objects.get(id=listing_id)
 
+    if Watchlist.objects.filter(user=request.user, listing=listing_id).exists():
+        return render(request, "auctions/listing.html", {
+            "listing": current_listing,
+            "place_bid": Bid_Form(),
+            "new_comment": Comment_Form(),
+            "watchlist": True
+        })
+
     return render(request, "auctions/listing.html", {
         "listing": current_listing,
         "place_bid": Bid_Form(),
-        "new_comment": Comment_Form()
+        "new_comment": Comment_Form(),
+        "watchlist": False
     })
 
 
@@ -168,6 +177,42 @@ def category(request, cat):
         "category": cat,
         "list_of_listings": list_of_listings
     })
+
+
+# Method for viewing a users watchlist
+@login_required
+def watchlist(request):
+    if Watchlist.objects.filter(user=request.user).exists():
+        return render(request, "auctions/watchlist.html", {
+            "watchlist": Watchlist.objects.filter(user=request.user)
+        })
+
+    return render(request, "auctions/watchlist.html", {
+        "watchlist": None
+    })
+
+# Method for adding a listing to a users watchlist
+@login_required
+def watchlist_add(request, listing_id):
+    current_listing = AuctionListing.objects.get(id=listing_id)
+
+    watchlist_item = Watchlist()
+    watchlist_item.user = request.user
+    watchlist_item.listing = current_listing
+    watchlist_item.save()
+    #watchlist_item.listing.add(current_listing)
+
+    return listing(request, listing_id)
+
+
+# Method for removing a listing from a users watchlist
+@login_required
+def watchlist_remove(request, listing_id):
+    current_listing = AuctionListing.objects.get(id=listing_id)
+
+    watchlist_item = Watchlist.objects.get(listing=current_listing)
+    watchlist_item.delete()
+    return listing(request, listing_id)
 
 
 def login_view(request):

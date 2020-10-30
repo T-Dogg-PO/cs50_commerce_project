@@ -57,7 +57,10 @@ class Comment(models.Model):
         return '%s - %s' % (self.listing.name, self.commentor)
 
 
-# # Implement model for each user's watchlist
-# class Watchlist(models.Model):
-#     user = User.get_username()  # Get the name of the user who's Watchlist we are going to
-#     listings = models.ForeignKey(AuctionListing, on_delete=models.CASCADE, related_name="listing")
+# Implement model for each user's watchlist
+class Watchlist(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default=1) # Get the name of the user who has this watchlist
+    listing = models.ForeignKey(AuctionListing, on_delete=models.CASCADE, default=1) # Get each listing which is added to the watchlist
+
+    def __str__(self):
+        return f"{self.user}'s watchlist"

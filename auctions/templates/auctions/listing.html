@@ -22,6 +22,18 @@
                 Error: New bid must be higher than the current highest bid
             {% endif %}
         </form>
+
+        {% if watchlist == True %}
+            <form action="{% url 'watchlist_remove' listing.id %}" method="POST">
+                {% csrf_token %}
+                <input type="submit" value="Remove from watchlist">
+            </form>
+        {% else %}
+            <form action="{% url 'watchlist_add' listing.id %}" method="POST">
+                {% csrf_token %}
+                <input type="submit" value="Add to watchlist">
+            </form>
+        {% endif %}
     {% endif %}
 
 
@@ -43,6 +55,7 @@
             <strong>{{ comment.commentor}} - {{ comment.date_added }}</strong>
             <br/>
             {{ comment.content }}
+            <br/>
         {% endfor %}
     {% endif %}
 
