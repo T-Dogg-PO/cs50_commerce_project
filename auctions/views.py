@@ -6,6 +6,7 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 from django import forms
 from django.db.models.fields import BLANK_CHOICE_DASH
+from django.contrib import messages
 
 from .models import User, AuctionListing, Category, Bid, Comment, Watchlist
 
@@ -48,7 +49,7 @@ class Comment_Form(forms.ModelForm):
 # Default view / landing page
 def index(request):
     return render(request, "auctions/index.html", {
-        "active_listings": AuctionListing.objects.all()
+        "active_listings": AuctionListing.objects.filter(active=True)
     })
 
 
@@ -86,19 +87,27 @@ def create(request):
 def listing(request, listing_id):
     current_listing = AuctionListing.objects.get(id=listing_id)
 
-    if Watchlist.objects.filter(user=request.user, listing=listing_id).exists():
+    if request.user.is_authenticated:
+        if Watchlist.objects.filter(user=request.user, listing=listing_id).exists():
+            return render(request, "auctions/listing.html", {
+                "listing": current_listing,
+                "place_bid": Bid_Form(),
+                "new_comment": Comment_Form(),
+                "watchlist": True,
+            })
+    else:
         return render(request, "auctions/listing.html", {
             "listing": current_listing,
             "place_bid": Bid_Form(),
             "new_comment": Comment_Form(),
-            "watchlist": True
+            "watchlist": False,
         })
 
     return render(request, "auctions/listing.html", {
         "listing": current_listing,
         "place_bid": Bid_Form(),
         "new_comment": Comment_Form(),
-        "watchlist": False
+        "watchlist": False,
     })
 
 
@@ -114,11 +123,8 @@ def new_bid(request, listing_id):
             bid_price = bid_form.cleaned_data["price"]
 
             if bid_price <= current_price:
-                return render(request, "auctions/listing.html", {
-                    "listing": current_listing,
-                    "place_bid": Bid_Form(),
-                    "error": True
-                })
+                messages.error(request, 'Error: New bid must be higher than the current highest bid')
+                return redirect('listing', listing_id)
             else:
                 bid = Bid()
                 bid.listing = current_listing
@@ -127,11 +133,7 @@ def new_bid(request, listing_id):
                 current_listing.current_highest_bidder = request.user
                 current_listing.save()
                 bid.save()
-                return render(request, "auctions/listing.html", {
-                    "listing": current_listing,
-                    "place_bid": Bid_Form(),
-                    "error": False
-                })
+                return HttpResponseRedirect(reverse('listing', args=[listing_id]))
         return index(request)
     return index(request)
 
@@ -200,7 +202,6 @@ def watchlist_add(request, listing_id):
     watchlist_item.user = request.user
     watchlist_item.listing = current_listing
     watchlist_item.save()
-    #watchlist_item.listing.add(current_listing)
 
     return listing(request, listing_id)
 
@@ -212,6 +213,18 @@ def watchlist_remove(request, listing_id):
 
     watchlist_item = Watchlist.objects.get(listing=current_listing)
     watchlist_item.delete()
+    return listing(request, listing_id)
+
+
+# Method for declaring a winner
+@login_required
+def winner(request, listing_id):
+    current_listing = AuctionListing.objects.get(id=listing_id)
+
+    current_listing.active = False
+    current_listing.winner = current_listing.current_highest_bidder
+    current_listing.save()
+
     return listing(request, listing_id)
 
 

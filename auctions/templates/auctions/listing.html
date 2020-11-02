@@ -13,26 +13,40 @@
     <p>Current price: {{ listing.price }}</p>
 
     {% if user.is_authenticated %}
-        <h6>Place your bid: </h6>
-        <form action="{% url 'new_bid' listing.id %}" method="POST">
-            {% csrf_token %}
-            {{ place_bid }}
-            <input type="submit" value="Place Bid">
-            {% if error == True %}
-                Error: New bid must be higher than the current highest bid
-            {% endif %}
-        </form>
+        {% if listing.active == True and user.id != listing.user.id %}
+            <h6>Place your bid: </h6>
+            <form action="{% url 'new_bid' listing.id %}" method="POST">
+                {% csrf_token %}
+                {{ place_bid }}
+                <input type="submit" value="Place Bid">
+                {% if messages %}
+                    {% for message in messages %}
+                        {{ message }}
+                    {% endfor %}
+                {% endif %}
+            </form>
 
-        {% if watchlist == True %}
-            <form action="{% url 'watchlist_remove' listing.id %}" method="POST">
-                {% csrf_token %}
-                <input type="submit" value="Remove from watchlist">
-            </form>
-        {% else %}
-            <form action="{% url 'watchlist_add' listing.id %}" method="POST">
-                {% csrf_token %}
-                <input type="submit" value="Add to watchlist">
-            </form>
+            {% if watchlist == True %}
+                <form action="{% url 'watchlist_remove' listing.id %}" method="POST">
+                    {% csrf_token %}
+                    <input type="submit" value="Remove from watchlist">
+                </form>
+            {% else %}
+                <form action="{% url 'watchlist_add' listing.id %}" method="POST">
+                    {% csrf_token %}
+                    <input type="submit" value="Add to watchlist">
+                </form>
+            {% endif %}
+        {% elif listing.active == False %}
+            {% if listing.winner.id == user.id %}
+                <p>You have won this auction for the price of {{ listing.price }}!</p>
+            {% elif listing.user.id == user.id %}
+                {% if listing.winner.id == None %}
+                    <p>You have closed this auction. Nobody won.</p>
+                {% else %}
+                    <p>You have closed this auction. {{ listing.winner }} has won for {{ listing.price }}.</p>
+                {% endif %}
+            {% endif %}
         {% endif %}
     {% endif %}
 
@@ -57,6 +71,14 @@
             {{ comment.content }}
             <br/>
         {% endfor %}
+    {% endif %}
+
+
+    {% if user.is_authenticated and user.id == listing.user.id and listing.active == True %}
+        <form action="{% url 'winner' listing.id %}" method="POST">
+            {% csrf_token %}
+            <input type="submit" value="Close auction">
+        </form>
     {% endif %}
 
 
