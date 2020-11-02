@@ -5,9 +5,11 @@
 
     <ul>
     {% for listing in list_of_listings %}
-        <li class="nav-item">
-                <a class="nav-link" href="{% url 'listing' listing.pk %}">{{ listing.name }}</a>
-        </li>
+        {% if listing.active == True %}
+            <li class="nav-item">
+                    <a class="nav-link" href="{% url 'listing' listing.pk %}">{{ listing.name }}</a>
+            </li>
+        {% endif %}
     {% endfor %}
     </ul>
 {% endblock %}

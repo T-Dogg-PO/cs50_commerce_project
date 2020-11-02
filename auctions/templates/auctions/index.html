@@ -7,6 +7,12 @@
         <ul>
             <li class="nav-item">
                     <a class="nav-link" href="{% url 'listing' listing.pk %}">{{ listing.name }}</a>
+                    {{ listing.description }}
+                    <br>{{ listing.price }}
+                    <br>{% if listing.image_link %}
+                            <img src="{{ listing.image_link }}" alt="{{ listing.name }} image">
+                        {% endif %}
+                    <br><br><br>
             </li>
         </ul>
     {% endfor %}

@@ -77,6 +77,7 @@ def create(request):
 
         return redirect('index')
 
+    # Otherwise, return the create new listing form
     else:
         return render(request, "auctions/create.html", {
             "create_form": Create()
@@ -85,8 +86,24 @@ def create(request):
 
 # Method for viewing a listing's details
 def listing(request, listing_id):
+    # Get the listing in question from the database
     current_listing = AuctionListing.objects.get(id=listing_id)
 
+    # Perform checks to see if this listing is active or not. If a user who is not the owner or winner of a closed auction tries to access
+    # the page (e.g. through a direct link), display an error instead
+    if current_listing.winner is not None:
+        if current_listing.active == False and request.user.id != current_listing.winner.id and request.user.id != current_listing.user.id:
+            return render(request, "auctions/error.html", {
+                "error": "This auction is no longer active"
+            })
+    else:
+        if current_listing.active == False and request.user.id != current_listing.user.id:
+            return render(request, "auctions/error.html", {
+                "error": "This auction is no longer active"
+            })
+
+    # Check if the user is authenticated and if the listing exists on their watchlist. Display HTML differently depending
+    # on watchlist options
     if request.user.is_authenticated:
         if Watchlist.objects.filter(user=request.user, listing=listing_id).exists():
             return render(request, "auctions/listing.html", {
@@ -111,20 +128,36 @@ def listing(request, listing_id):
     })
 
 
+# Method for showing all the listings a user has created
+def my_listings(request):
+    if AuctionListing.objects.filter(user=request.user).exists():
+        return render(request, "auctions/my_listings.html", {
+            "my_listings": AuctionListing.objects.filter(user=request.user)
+        })
+
+    return render(request, "auctions/my_listings.html", {
+        "my_listings": None
+    })
+
 # Method for placing a new bid on a current listing
 def new_bid(request, listing_id):
+    # If method is post, store the submitted data in bid_form
     if request.method == "POST":
         bid_form = Bid_Form(request.POST)
 
+        # Check if the form is valid
         if bid_form.is_valid():
+            # Get information about the listing in question and the sumbitted new bid
             current_listing = AuctionListing.objects.get(id=listing_id)
             current_price = current_listing.price
 
             bid_price = bid_form.cleaned_data["price"]
 
+            # Validate that the new bid is higher than the old price
             if bid_price <= current_price:
                 messages.error(request, 'Error: New bid must be higher than the current highest bid')
                 return redirect('listing', listing_id)
+            # If yes, save all the data to the database and return to the listing page
             else:
                 bid = Bid()
                 bid.listing = current_listing
@@ -141,9 +174,11 @@ def new_bid(request, listing_id):
 # Method for creating a new comment on a listing
 @login_required
 def new_comment(request, listing_id):
+    # If method is post, store submitted data in comment_form
     if request.method == "POST":
         comment_form = Comment_Form(request.POST)
 
+        # If data is valid, save all the comment details in a Comment model
         if comment_form.is_valid():
             current_listing = AuctionListing.objects.get(id=listing_id)
             comment = Comment()
@@ -152,6 +187,7 @@ def new_comment(request, listing_id):
             comment.commentor = request.user
             comment.save()
 
+            # Return to the listing page
             return listing(request, listing_id)
 
     return listing(request, listing_id)
@@ -170,23 +206,19 @@ def categories(request):
 
 # Method for displaying all of the listings under a specific category
 def category(request, cat):
-    list_of_listings = []
-    for individual_listing in AuctionListing.objects.all():
-        if individual_listing.category == cat:
-            list_of_listings.append(individual_listing)
-
     return render(request, "auctions/category.html", {
         "category": cat,
-        "list_of_listings": list_of_listings
+        "list_of_listings": AuctionListing.objects.filter(category=cat)
     })
 
 
 # Method for viewing a users watchlist
 @login_required
 def watchlist(request):
-    if Watchlist.objects.filter(user=request.user).exists():
+    # Check for Watchlist objects to exist for a user, and check that they are still active
+    if Watchlist.objects.filter(user=request.user, listing__active=True).exists():
         return render(request, "auctions/watchlist.html", {
-            "watchlist": Watchlist.objects.filter(user=request.user)
+            "watchlist": Watchlist.objects.filter(user=request.user, listing__active=True)
         })
 
     return render(request, "auctions/watchlist.html", {
@@ -226,6 +258,19 @@ def winner(request, listing_id):
     current_listing.save()
 
     return listing(request, listing_id)
+
+
+# Method for seeing auctions that you have won
+@login_required
+def winnings(request):
+    if AuctionListing.objects.filter(winner=request.user).exists():
+        return render(request, "auctions/winnings.html", {
+            "winnings": AuctionListing.objects.filter(winner=request.user)
+        })
+
+    return render(request, "auctions/winnings.html", {
+        "winnings": None
+    })
 
 
 def login_view(request):

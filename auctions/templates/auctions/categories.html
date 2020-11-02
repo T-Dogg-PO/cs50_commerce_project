@@ -6,7 +6,7 @@
     <ul>
     {% for category in cats %}
         <li class="nav-item">
-                <a class="nav-link" href="{% url 'category' category|slugify %}">{{ category }}</a>
+                <a class="nav-link" href="{% url 'category' category %}">{{ category }}</a>
         </li>
     {% endfor %}
     </ul>

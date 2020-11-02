@@ -9,11 +9,13 @@
     {% else %}
 
         {% for listing in watchlist %}
-            <ul>
-                <li class="nav-item">
-                        <a class="nav-link" href="{% url 'listing' listing.listing.pk %}">{{ listing.listing.name }}</a>
-                </li>
-            </ul>
+            {% if listing.listing.active == True %}
+                <ul>
+                    <li class="nav-item">
+                            <a class="nav-link" href="{% url 'listing' listing.listing.pk %}">{{ listing.listing.name }}</a>
+                    </li>
+                </ul>
+            {% endif %}
         {% endfor %}
 
     {% endif %}
